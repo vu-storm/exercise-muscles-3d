@@ -73,7 +73,7 @@ thế giới** (không dùng trục cục bộ của xương Mixamo). `Foot`/`To
 | `pinJoint` | `'ToeBase'` = ghim ở mũi bàn chân (nhón gót, chạy). |
 | `support: { joint, height, axis, range }` | Điểm tựa thứ hai: giải góc `Hips` để `joint` cách sàn `height` m — `axis: 'pitch'` ngả trước/sau (bridge, plank, bird dog), `'roll'` nghiêng bên (side plank). `supportHeight` trên mốc để đổi độ cao theo thời gian. |
 | `peak` | `'low'` (mặc định: Hips thấp nhất là điểm đỉnh), `'high'` (bridge, nhón gót, step-up), `'none'` (giữ tĩnh / bài chạy: tô cơ suốt động tác). |
-| `props` | `{ type: 'box', forward, width, depth, height }`, `{ type: 'kettlebell', between: ['LeftHand', 'RightHand'] }`. |
+| `props` | `{ type: 'box', forward, width, depth, height }`, `{ type: 'kettlebell', between: ['LeftHand', 'RightHand'], grip: 'bell' }` (`grip: 'bell'` = hai lòng bàn tay ôm thân tạ, quai chúc xuống; `down` âm = tạ cao hơn cổ tay). |
 | `muscles` trên mốc | Đổi nhóm cơ theo đoạn (bên đang làm việc). |
 
 **Ghép động tác** (`compose.js`): `mirror(part)` đổi trái ↔ phải mọi thứ (góc, ghim, điểm tựa,
@@ -100,7 +100,8 @@ Luôn kiểm tra thêm: điểm ghim không trượt, không xuyên sàn, không
 Mọi động tác dựng bằng code đều phải ĐẠT `npm run check` trước khi đưa vào danh sách.
 
 Các góc tiếp xúc được **giải số** chứ không ước lượng tay (lý do và giá trị ban đầu ghi chú
-trong từng file): lunge (gối sau 3 cm trên sàn), glute bridge (vai–hông–gối 180°, gối 90°),
+trong từng file): lunge (gối sau 3 cm trên sàn), glute bridge (vai–hông–gối 180°, gối 90°,
+lưng ngực duỗi để bả vai nằm phẳng — `node tools/tune-contacts.mjs bridge`),
 step-up (bàn chân đặt đúng mặt bục 50 cm, đường nhấc chân không chạm mép bục), giãn gập hông
 (gối sau tì sàn, không trượt khi đẩy hông), giãn đùi sau (gót chạm sàn), giãn bắp chân (bàn
 chân trước phẳng).

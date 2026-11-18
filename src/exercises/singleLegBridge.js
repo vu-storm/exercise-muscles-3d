@@ -9,7 +9,7 @@ import { lying, bridgeTop, SUPPORT_LYING, SUPPORT_TOP } from './bridge.js';
 import { mirror, sequence } from './compose.js';
 
 // Bàn chân giơ lên: góc so với sàn = hướng cẳng chân (≈ độ nghiêng thân + góc đùi) để cổ
-// chân ở tư thế trung tính. Thân nằm ≈ −88°, ở đỉnh ≈ −111° (do điểm tựa giải ra).
+// chân ở tư thế trung tính. Thân nằm ≈ −88°, ở đỉnh ≈ −101° (do điểm tựa giải ra).
 const lyingLegUp = {
   ...lying,
   RightUpLeg: lying.LeftUpLeg,
@@ -20,7 +20,7 @@ const topLegUp = {
   ...bridgeTop,
   RightUpLeg: bridgeTop.LeftUpLeg,
   RightLeg: 0,
-  RightFoot: -(111 + bridgeTop.LeftUpLeg),
+  RightFoot: -(101 + bridgeTop.LeftUpLeg),
 };
 
 const leftWorking = {
@@ -41,7 +41,7 @@ const leftWorking = {
     { label: 'Đùi thẳng hàng với thân', at: 1.9, angle: 'align', range: [175, 185] },
     { label: 'Gối chân làm việc 90°', at: 1.9, angle: 'kneeL', range: [87, 93] },
     { label: 'Chân giơ lên duỗi thẳng', at: 1.9, angle: 'kneeR', range: [160, 181] },
-    { label: 'Hông nâng khỏi sàn', at: 1.9, bones: ['Hips', 'LeftUpLeg', 'RightUpLeg', 'Spine'], range: [0.08, 1] },
+    { label: 'Hông nâng khỏi sàn', at: 1.9, bones: ['Hips', 'LeftUpLeg', 'RightUpLeg', 'Spine'], range: [0.15, 1] },
     { label: 'Bàn chân làm việc trên sàn', at: 1.9, bones: ['LeftFoot', 'LeftToeBase', 'LeftToe_End'], range: [-0.01, 0.01] },
   ],
 };

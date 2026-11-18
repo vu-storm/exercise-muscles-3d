@@ -7,7 +7,8 @@
 //
 // • box: hộp đặt trên sàn; tâm mặt đáy = giữa hai cổ chân lúc đứng dời `forward`/`left` mét
 //   (theo hướng người). check.js kiểm tra không đỉnh nào xuyên vào hộp.
-// • kettlebell: chỉ để minh hoạ — bám giữa hai khớp `between`, thấp hơn `down` mét.
+// • kettlebell: chỉ để minh hoạ — bám giữa hai khớp `between`, thấp hơn `down` mét (âm = cao hơn).
+//   `grip: 'bell'` = hai lòng bàn tay ôm thân tạ, quai chúc xuống (goblet); mặc định cầm quai.
 
 import * as THREE from 'three';
 
@@ -58,6 +59,10 @@ export function createProps(exercise, rig) {
     const body = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 24), mat);
     const handle = new THREE.Mesh(new THREE.TorusGeometry(r * 0.62, r * 0.14, 12, 32, Math.PI), mat);
     handle.position.y = r * 0.75;
+    if (p.grip === 'bell') {
+      handle.rotation.z = Math.PI; // quai chúc xuống
+      handle.position.y = -r * 0.75;
+    }
     body.castShadow = handle.castShadow = true;
     bell.add(body, handle);
     group.add(bell);

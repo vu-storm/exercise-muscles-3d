@@ -1,5 +1,5 @@
 // Công cụ giải số góc tiếp xúc (gối/gót/bàn chân chạm sàn, bàn chân lên bục) cho các động tác.
-// Chạy: node tools/tune-contacts.mjs <step|path|hip|ham|calf> — in ra góc cần ghi vào dữ liệu.
+// Chạy: node tools/tune-contacts.mjs <step|path|hip|ham|calf|bridge> — in ra góc cần ghi vào dữ liệu.
 import * as THREE from 'three';
 import { loadNodeModel } from './check-exercise.mjs';
 import { buildClip, solvePose } from '../src/exercises/build.js';
@@ -75,4 +75,35 @@ if (which === 'path') {
     if (d <= 0.001) { console.log('OK', d.toFixed(4), JSON.stringify(tuck), JSON.stringify(lift)); }
   }
   console.log('best', best.d.toFixed(4), JSON.stringify(best.tuck), JSON.stringify(best.lift));
+}
+if (which === 'bridge') {
+  // Giải trọn đỉnh bridge với cột sống ngực duỗi nhẹ (lưng trên nằm phẳng trên sàn):
+  //   Neck cao h sao cho vai/lưng trên chạm sàn; đùi (U) cho vai–hông–gối 180°; gối (K) 90°;
+  //   tay (flex) để bàn tay nằm trên sàn; cổ/đầu để đầu tựa sàn.
+  const B = await import('../src/exercises/bridge.js');
+  const spine = JSON.parse(process.argv[3] ?? '{"Spine1":-15,"Spine2":-20}');
+  const chk = (label, bones) => ({ label, bones });
+  const checks = [{ label: 'align', angle: 'align' }, { label: 'knee', angle: 'kneeL' },
+    chk('back', ['Spine1', 'Spine2', 'LeftShoulder', 'RightShoulder']), chk('hips', ['Hips', 'LeftUpLeg', 'RightUpLeg', 'Spine']),
+    chk('head', ['Head', 'HeadTop_End', 'Neck']), chk('hands', ['LeftHand', 'RightHand']), chk('arm', ['LeftArm', 'LeftForeArm'])];
+  const m = (a, h) => measure(a, { pinnedFoot: 'Left', support: { joint: 'Neck', height: h } }, checks);
+  let pose = { ...B.bridgeTop, ...spine }, h = 0.1;
+  const set = (o) => (pose = { ...pose, ...o });
+  for (let pass = 0; pass < 4; pass++) {
+    const Kfor = (U) => solve1((k) => m({ ...pose, LeftUpLeg: U, RightUpLeg: U, LeftLeg: k, RightLeg: k }, h).knee - 90, 60, 120, 16);
+    const U = solve1((u) => m({ ...pose, LeftUpLeg: u, RightUpLeg: u, LeftLeg: Kfor(u), RightLeg: Kfor(u) }, h).align - 180, -20, 40, 16);
+    const K = Kfor(U);
+    set({ LeftUpLeg: r1(U), RightUpLeg: r1(U), LeftLeg: r1(K), RightLeg: r1(K) });
+    h = Math.round(solve1((x) => m(pose, x).back - 0.003, 0.03, 0.25, 18) * 1e4) / 1e4;
+    const nk = solve1((n) => m({ ...pose, Neck: n, Head: n }, h).head - 0.005, -30, 50, 16);
+    set({ Neck: r1(nk), Head: r1(nk) });
+    const af = solve1((f) => m({ ...pose, LeftArm: { flex: f, adduct: 15 }, RightArm: { flex: f, adduct: 15 } }, h).hands - 0.01, -90, 0, 16);
+    set({ LeftArm: { flex: r1(af), adduct: 15 }, RightArm: { flex: r1(af), adduct: 15 } });
+  }
+  const r = m(pose, h);
+  console.log('neckHeight', h, JSON.stringify(pose));
+  console.log(Object.entries(r).map(([k, v]) => `${k}=${v.toFixed(3)}`).join(' '));
+  // bridge.js dùng điểm tựa Spine2 → độ cao Spine2 ở tư thế này là SUPPORT_TOP.
+  const p = solvePose(rig, pose, 'Left', { support: { joint: 'Neck', height: h } });
+  console.log('SUPPORT_TOP (Spine2 y)', p.worldPos[rig.byKey.Spine2].y.toFixed(4));
 }

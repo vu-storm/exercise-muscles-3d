@@ -4,13 +4,15 @@
 // Hướng các đoạn ở điểm thấp nhất (so với phương thẳng đứng, dương = đầu dưới ra trước):
 //   thân nghiêng 30° (Hips 30), đùi 95° (hơi dưới song song): UpLeg = 95 + 30 = 125,
 //   cẳng chân −32° (gối ra trước mũi chân một chút): Leg = 95 + 32 = 127.
-// Tay: cánh tay khép sát sườn, cẳng tay gập lên để hai tay ôm tạ trước xương ức.
+// Tay: khuỷu hướng xuống, đặt trước thân; cẳng tay gập lên và khép vào để hai lòng bàn tay
+// ôm hai bên thân tạ (quai chúc xuống) trước xương ức. Góc giải số: cổ tay cách đường giữa
+// 9,5 cm (vừa thân tạ), trước khớp Spine2 28 cm, thấp hơn 8,5 cm; khuỷu cách đường giữa 17 cm.
 
 const hold = {
-  LeftArm: { flex: 30, adduct: 40 },
-  RightArm: { flex: 30, adduct: 40 },
-  LeftForeArm: 135,
-  RightForeArm: 135,
+  LeftArm: { flex: 16, adduct: 27.5 },
+  RightArm: { flex: 16, adduct: 27.5 },
+  LeftForeArm: { flex: 70, adduct: 46.5 },
+  RightForeArm: { flex: 70, adduct: 46.5 },
 };
 
 const bottom = {
@@ -21,8 +23,10 @@ const bottom = {
   RightUpLeg: 125,
   LeftLeg: 127,
   RightLeg: 127,
-  LeftArm: { flex: 50, adduct: 40 }, // bù độ nghiêng thân để tạ vẫn sát ngực
-  RightArm: { flex: 50, adduct: 40 },
+  LeftArm: { flex: 35.5, adduct: 28 }, // bù độ nghiêng thân để tạ vẫn sát ngực
+  RightArm: { flex: 35.5, adduct: 28 },
+  LeftForeArm: { flex: 75, adduct: 48.5 },
+  RightForeArm: { flex: 75, adduct: 48.5 },
 };
 
 export default {
@@ -38,7 +42,7 @@ export default {
     { time: 1.7, angles: bottom },
     { time: 3, angles: hold },
   ],
-  props: [{ type: 'kettlebell', between: ['LeftHand', 'RightHand'], down: 0.06, radius: 0.09 }],
+  props: [{ type: 'kettlebell', between: ['LeftHand', 'RightHand'], grip: 'bell', down: -0.04, radius: 0.09 }],
   // Tạ phía trước buộc cơ bụng + cơ dựng sống giữ thân thẳng.
   muscles: {
     primary: ['quads', 'glutes'],
