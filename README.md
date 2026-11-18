@@ -1,5 +1,9 @@
 # Exercise Muscles 3D
 
+[![CI](https://github.com/vu-storm/exercise-muscles-3d/actions/workflows/ci.yml/badge.svg)](https://github.com/vu-storm/exercise-muscles-3d/actions/workflows/ci.yml)
+
+**▶ Xem trực tiếp: <https://vu-storm.github.io/exercise-muscles-3d/>** (máy tính và điện thoại)
+
 **Web 3D mô phỏng nhóm cơ hoạt động trong các động tác thể dục**: mô hình người écorché (lộ cơ) thực hiện
 động tác, nhóm cơ đang **co** tô đỏ, cơ đang được **kéo giãn** tô xanh, độ đậm theo biên độ
 động tác. Kèm số đo góc khớp trực tiếp và gợi ý kỹ thuật cho từng bài.
@@ -22,6 +26,8 @@ kiểm tra tư thế (chạm sàn, không xuyên sàn, thăng bằng) trước k
   trước / bên / chéo (mỗi bài tự chọn góc nhìn phù hợp). Mặc định mô hình đứng yên, chọn
   động tác mới bắt đầu.
 - **Đạo cụ** — bục step-up, tạ ấm goblet squat.
+- **Dùng được trên điện thoại** — bảng điều khiển thu gọn thành thanh dưới đáy, camera tự căn
+  theo khổ màn hình dọc.
 
 ![Giao diện](docs/giao-dien.png)
 
@@ -35,6 +41,9 @@ npm run dev       # mở http://localhost:5173
 npm run build     # đóng gói vào dist/ (web tĩnh)
 npm run check     # tự kiểm tra mọi động tác (Node, không cần trình duyệt)
 ```
+
+Mỗi lần push, GitHub Actions chạy `npm run check` + build; push lên `main` thì tự triển khai lên
+GitHub Pages ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
 
 Trình chiếu một khung hình cố định bằng tham số URL, ví dụ
 `?ex=plank&t=1&view=side&ui=0` — `ex` động tác, `t` giây, `view` front/side/threeQuarter,
@@ -90,12 +99,30 @@ src/angles.js        bảng số đo + cung góc gối
 src/ui.js            bảng điều khiển
 src/exercises/       dữ liệu động tác + build.js (góc → animation), compose.js (đổi chân, ghép),
                      check.js (tự kiểm tra), props.js (đạo cụ)
-tools/               check-exercise.mjs (npm run check), tune-contacts.mjs (giải góc tiếp xúc)
+tools/               check-exercise.mjs (npm run check), tune-contacts.mjs (giải góc tiếp xúc),
+                     prepare-model.mjs (npm run model: chuẩn bị file mô hình cho web)
 docs/                hướng dẫn kỹ thuật, ảnh minh hoạ
 ```
 
 ## Công nghệ
 
 [three.js](https://threejs.org/) · [Vite](https://vitejs.dev/) · JavaScript thuần (không framework).
-Mô hình: người écorché cao 1,8 m, khung xương Mixamo 41 xương, animation Air Squat
-(`public/ecorche_air_squat.glb`).
+Mô hình: người écorché cao 1,8 m, khung xương 41 xương (đặt tên theo Mixamo), **không kèm
+animation** — mọi động tác dựng bằng code từ góc khớp (`public/ecorche.glb`, nén meshopt, ~0,7 MB).
+
+`public/ecorche.glb` được tạo từ file xuất ra Blender bằng `npm run model -- <file gốc.glb>`:
+bỏ mọi animation, sửa pháp tuyến lỗi của lưới tạo tự động, nén lưới. File gốc để trong
+`assets-src/` (không đưa lên repo).
+
+## Giấy phép & ghi công
+
+- **Mã nguồn**: [MIT](LICENSE).
+- **Mô hình 3D** (`public/ecorche.glb`) **không** thuộc giấy phép MIT ở trên:
+  - Hình dạng người được tạo bằng **Google Gemini** (ảnh tham chiếu) và
+    **[Tencent Hunyuan3D](https://github.com/Tencent/Hunyuan3D-2)** (ảnh → lưới 3D). Phần sinh
+    bởi Hunyuan3D chịu điều khoản của *Tencent Hunyuan 3D Community License* — giấy phép này giới
+    hạn khu vực được sử dụng và quy mô dùng thương mại; đọc kỹ
+    [điều khoản](https://github.com/Tencent/Hunyuan3D-2/blob/main/LICENSE) trước khi dùng mô hình
+    cho sản phẩm thương mại.
+  - Khung xương gắn tự động bằng **[Adobe Mixamo](https://www.mixamo.com/)**. Repo không chứa
+    animation hay nhân vật nào của Mixamo; động tác đều dựng bằng code trong `src/exercises/`.
