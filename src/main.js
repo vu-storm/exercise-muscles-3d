@@ -130,7 +130,7 @@ function frameExercise(bounds) {
 // ---------- Tải mô hình ----------
 const params = new URLSearchParams(location.search);
 const loadingEl = document.getElementById('loading');
-const model = await loadModel(`${import.meta.env.BASE_URL}ecorche_air_squat.glb`, clay, (p) => {
+const model = await loadModel(`${import.meta.env.BASE_URL}ecorche.glb`, clay, (p) => {
   loadingEl.textContent = `Đang tải mô hình… ${Math.round(p * 100)}%`;
 });
 const seg = buildMuscleAttribute(model.mesh);
@@ -145,7 +145,7 @@ const clips = new Map();
 const propsOf = new Map();
 function ensureExercise(ex) {
   if (clips.has(ex.id)) return clips.get(ex.id);
-  const clip = ex.source === 'glb' ? model.glbClip : buildClip(ex, model.rig);
+  const clip = buildClip(ex, model.rig);
   clips.set(ex.id, clip);
   player.add(ex.id, clip, { peak: ex.peak });
   const props = createProps(ex, model.rig);

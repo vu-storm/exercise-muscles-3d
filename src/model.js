@@ -2,11 +2,13 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { boneKey } from './muscles.js';
 import { createRig } from './exercises/build.js';
 
 export async function loadModel(url, material, onProgress) {
-  const gltf = await new GLTFLoader().loadAsync(url, (e) => {
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder); // lưới nén meshopt
+  const gltf = await loader.loadAsync(url, (e) => {
     if (onProgress && e.total) onProgress(e.loaded / e.total);
   });
   const root = gltf.scene;
@@ -17,6 +19,7 @@ export async function loadModel(url, material, onProgress) {
   });
   if (!mesh) throw new Error('Không tìm thấy SkinnedMesh trong GLB');
 
+  dequantize(mesh.geometry);
   mesh.material = material;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -34,7 +37,6 @@ export async function loadModel(url, material, onProgress) {
     mesh,
     bones,
     rig,
-    glbClip: gltf.animations[0],
     mixer: new THREE.AnimationMixer(root),
   };
 }
@@ -169,6 +171,22 @@ export class ExercisePlayer {
   forward() {
     return this.model.rig.fwd.clone();
   }
+}
+
+/**
+ * File GLB được lượng tử hoá (npm run model): vị trí/pháp tuyến/trọng số là số nguyên chuẩn hoá.
+ * Đổi lại sang Float32 để các phép tính trên CPU (vùng cơ, kiểm tra) đọc thẳng mảng như trước.
+ */
+export function dequantize(geometry) {
+  for (const [name, attr] of Object.entries(geometry.attributes)) {
+    if (!attr.normalized) continue;
+    const out = new Float32Array(attr.count * attr.itemSize);
+    for (let i = 0; i < attr.count; i++)
+      for (let k = 0; k < attr.itemSize; k++) out[i * attr.itemSize + k] = attr.getComponent(i, k);
+    geometry.setAttribute(name, new THREE.BufferAttribute(out, attr.itemSize));
+  }
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
 }
 
 /** Lưu vị trí/quay/tỉ lệ cục bộ của các xương; trả về hàm khôi phục. */

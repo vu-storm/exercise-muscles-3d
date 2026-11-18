@@ -1,2 +1,5 @@
 node_modules
 dist
+# File mô hình gốc (có thể chứa animation Mixamo) — chỉ giữ trên máy, không đưa lên repo.
+# public/ecorche.glb được tạo từ đây bằng `npm run model`.
+assets-src/
