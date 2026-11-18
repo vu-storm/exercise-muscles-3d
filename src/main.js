@@ -12,7 +12,7 @@ import { buildClip, segmentValue } from './exercises/build.js';
 import { createProps } from './exercises/props.js';
 import { checkExercise, printCheck } from './exercises/check.js';
 import { AngleTracker } from './angles.js';
-import { createUI } from './ui.js';
+import { createUI, SHEET_QUERY } from './ui.js';
 import './style.css';
 
 const BG = 0xe4e4e4;
@@ -41,7 +41,7 @@ const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerH
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.minDistance = 1.2;
-controls.maxDistance = 9;
+controls.maxDistance = 14; // màn hình dọc lùi camera xa hơn (cameraDistance)
 controls.maxPolarAngle = Math.PI * 0.53; // không chui xuống dưới sàn
 const TARGET = new THREE.Vector3(0, 0.8, 0);
 controls.target.copy(TARGET);
@@ -83,6 +83,19 @@ const muscleUniforms = applyMuscleShader(clay);
 // ---------- Camera presets (tính theo hướng nhìn của người) ----------
 let forward = new THREE.Vector3(0, 0, 1);
 let viewDist = 3.4;
+let frameWidth = 1.2; // bề ngang cần thấy của động tác (m) — đặt trong frameExercise
+let freeHeight = window.innerHeight; // phần màn hình không bị bảng che (px) — đặt trong layoutViewport
+
+/**
+ * Khoảng cách camera thực dùng: viewDist (chọn cho màn hình ngang) lùi thêm khi bảng che phần
+ * đáy, và đủ xa để bề ngang động tác lọt khung trên màn hình dọc hẹp (tư thế nằm ~2 m).
+ */
+function cameraDistance() {
+  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const freeAspect = window.innerWidth / freeHeight;
+  const fitWidth = (frameWidth * 1.1) / (2 * tanV * freeAspect);
+  return Math.max(viewDist * (window.innerHeight / freeHeight), fitWidth);
+}
 let currentView = 'threeQuarter';
 function viewPosition(name) {
   const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
@@ -91,7 +104,8 @@ function viewPosition(name) {
   else if (name === 'side') dir = right.clone().negate(); // nhìn từ bên trái người tập
   else dir = forward.clone().multiplyScalar(Math.cos(0.7)).addScaledVector(right, -Math.sin(0.7)); // chéo 3/4
   dir.normalize();
-  return TARGET.clone().addScaledVector(dir, viewDist).add(new THREE.Vector3(0, 0.35, 0));
+  const d = cameraDistance();
+  return TARGET.clone().addScaledVector(dir, d).add(new THREE.Vector3(0, (0.35 * d) / viewDist, 0));
 }
 
 let camTween = null;
@@ -124,6 +138,7 @@ function frameExercise(bounds) {
   const size = bounds.getSize(new THREE.Vector3());
   TARGET.set(c.x, THREE.MathUtils.clamp(c.y, 0.3, 0.85), c.z);
   viewDist = Math.max(3.0, size.length() * 1.65);
+  frameWidth = Math.max(size.x, size.z) + 0.5; // khớp → bề mặt lưới (đầu, bàn chân) thêm ~25 cm mỗi đầu
   placeLights();
 }
 
@@ -283,12 +298,30 @@ renderer.setAnimationLoop(() => {
   labelRenderer.render(scene, camera);
 });
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+/**
+ * Khung hình theo khổ màn hình. Trên điện thoại bảng điều khiển là thanh dưới đáy: dời tâm
+ * hình lên giữa phần màn hình còn trống (setViewOffset) và lùi camera để người lọt trong phần
+ * đó; màn hình dọc hẹp thì lùi thêm để tư thế nằm (dài ~1,9 m) không bị cắt ngang.
+ */
+function layoutViewport(reframe = false) {
+  const W = window.innerWidth, H = window.innerHeight;
+  camera.aspect = W / H;
+  const inset = Math.min(ui.bottomInset(), H * 0.5);
+  if (inset > 0) camera.setViewOffset(W, H, 0, inset / 2, W, H);
+  else camera.clearViewOffset();
   camera.updateProjectionMatrix();
+  const before = cameraDistance();
+  freeHeight = H - inset;
+  if (reframe || Math.abs(cameraDistance() - before) > 0.05) goToView(currentView, true);
+}
+
+window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  layoutViewport();
 });
+matchMedia(SHEET_QUERY).addEventListener('change', () => layoutViewport());
+layoutViewport(true);
 
 // ---------- Tự kiểm tra (chỉ khi chạy dev; tắt bằng ?check=0) ----------
 // Chạy nền sau khi trang đã hiện, mỗi động tác một lượt, dùng mixer riêng nên không ảnh hưởng

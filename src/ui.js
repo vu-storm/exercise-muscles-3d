@@ -3,6 +3,8 @@
 import { musclesInSpec, MUSCLE_CONFIG } from './muscles.js';
 
 const SIDE = { both: '', L: ' (trái)', R: ' (phải)' };
+/** Khổ màn hình dùng bảng dạng thanh dưới đáy — phải khớp với @media trong style.css. */
+export const SHEET_QUERY = '(max-width: 600px)';
 
 /**
  * @param {object} opts
@@ -31,9 +33,10 @@ export function createUI(opts) {
   const panel = document.createElement('div');
   panel.className = 'panel';
   panel.innerHTML = `
+    <button class="sheet-toggle" data-id="sheetToggle" aria-expanded="false">▲ Chi tiết</button>
     <h1>Nhóm cơ hoạt động</h1>
 
-    <section>
+    <section class="s-exercise">
       <select data-id="exercise" aria-label="Động tác">
         <option value="">— Tư thế đứng (chọn động tác) —</option>${options}
       </select>
@@ -43,9 +46,9 @@ export function createUI(opts) {
       </div>
     </section>
 
-    <section>
-      <div class="row">
-        <button class="btn primary" data-id="play">⏸ Tạm dừng</button>
+    <section class="s-controls">
+      <div class="row row-play">
+        <button class="btn primary" data-id="play" disabled>▶ Phát</button>
       </div>
       <div class="row seg" data-id="speed">
         <span class="lbl">Tốc độ</span>
@@ -65,12 +68,12 @@ export function createUI(opts) {
       </div>
     </section>
 
-    <section>
+    <section class="s-muscles">
       <h2 data-id="musclesTitle">Nhóm cơ</h2>
       <div data-id="muscles"></div>
     </section>
 
-    <section>
+    <section class="s-metrics">
       <h2>Số đo trực tiếp</h2>
       <table class="metrics">
         <tr><th></th><th>Trái</th><th>Phải</th></tr>
@@ -93,12 +96,26 @@ export function createUI(opts) {
   const timeEl = $('time');
   let playing = true;
   let scrubbing = false;
+  let hasExercise = false;
 
+  // Chưa chọn động tác: nút mờ và ghi "Phát" (không có gì đang chạy để tạm dừng).
+  const renderPlay = () => {
+    playBtn.disabled = !hasExercise;
+    playBtn.textContent = hasExercise && playing ? '⏸ Tạm dừng' : '▶ Phát';
+  };
   const setPlaying = (p) => {
     playing = p;
-    playBtn.textContent = p ? '⏸ Tạm dừng' : '▶ Phát';
+    renderPlay();
     opts.onPlayToggle(p);
   };
+
+  // Điện thoại: bảng điều khiển là thanh dưới đáy, bấm để mở rộng / thu gọn.
+  const sheetToggle = $('sheetToggle');
+  sheetToggle.addEventListener('click', () => {
+    const open = panel.classList.toggle('expanded');
+    sheetToggle.textContent = open ? '▼ Thu gọn' : '▲ Chi tiết';
+    sheetToggle.setAttribute('aria-expanded', String(open));
+  });
   playBtn.addEventListener('click', () => setPlaying(!playing));
 
   $('exercise').addEventListener('change', (e) => opts.onExercise(e.target.value));
@@ -169,6 +186,8 @@ export function createUI(opts) {
     setExercise(ex, duration) {
       $('exercise').value = ex?.id ?? '';
       const badge = $('badge');
+      hasExercise = !!ex;
+      renderPlay();
       if (!ex) {
         // Đứng yên: chưa có động tác nào được chọn.
         badge.style.display = 'none';
@@ -207,6 +226,16 @@ export function createUI(opts) {
     },
     hide() {
       panel.style.display = 'none';
+    },
+    /** Phần màn hình bị bảng che ở đáy (px) khi bảng ở dạng thanh dưới đáy và đang thu gọn. */
+    bottomInset() {
+      if (panel.style.display === 'none' || !matchMedia(SHEET_QUERY).matches) return 0;
+      // Đang mở rộng thì đo tạm ở dạng thu gọn: khung hình không nhảy theo mỗi lần mở bảng.
+      const open = panel.classList.contains('expanded');
+      if (open) panel.classList.remove('expanded');
+      const inset = window.innerHeight - panel.getBoundingClientRect().top;
+      if (open) panel.classList.add('expanded');
+      return inset;
     },
   };
   api.setExercise(opts.initial, 1);
